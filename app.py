@@ -164,58 +164,62 @@ else:
     }}
 
     function spin() {{
-        if(spinning) return;
-        spinning = true;
+    if(spinning) return;
+    spinning = true;
 
-        let targetIndex = names.indexOf("Nhung");
+    let targetIndex = names.indexOf("Nhung");
 
-        const extraSpins = 5 + Math.random() * 5;
+    const extraSpins = 5 + Math.random() * 5;
 
-        const targetAngle = (2 * Math.PI / names.length) * targetIndex;
+    const sliceAngle = (2 * Math.PI) / names.length;
 
-        const startRotation = rotation;
-        const finalRotation =
-            rotation +
-            extraSpins * Math.PI * 2 +
-            (Math.PI * 2 - targetAngle);
+    // 🔥 tính đúng tâm ô Nhung
+    const targetAngle = targetIndex * sliceAngle + sliceAngle / 2;
 
-        const duration = 4000;
-        let start = null;
+    const startRotation = rotation;
 
-        function anim(t) {{
-            if(!start) start = t;
-            let progress = (t - start) / duration;
-            if(progress > 1) progress = 1;
+    // 🔥 FIX CHUẨN (kim ở top)
+    const finalRotation =
+        rotation +
+        extraSpins * Math.PI * 2 +
+        (Math.PI / 2 - targetAngle);
 
-            let eased = easeOut(progress);
+    const duration = 4000;
+    let start = null;
 
-            rotation = startRotation + (finalRotation - startRotation) * eased;
+    function anim(t) {{
+        if(!start) start = t;
+        let progress = (t - start) / duration;
+        if(progress > 1) progress = 1;
 
-            draw();
+        let eased = easeOut(progress);
 
-            if(progress < 1) {{
-                requestAnimationFrame(anim);
-            }} else {{
-                spinning = false;
+        rotation = startRotation + (finalRotation - startRotation) * eased;
 
-                let winner = "Nhung";
+        draw();
 
-                for(let i=0;i<5;i++) {{
-                    confetti({{
-                        particleCount: 100,
-                        spread: 70,
-                        origin: {{y:0.6}}
-                    }});
-                }}
+        if(progress < 1) {{
+            requestAnimationFrame(anim);
+        }} else {{
+            spinning = false;
 
-                winnerText.innerHTML = "🎉 " + winner;
-                overlay.style.display = "flex";
+            let winner = "Nhung";
+
+            for(let i=0;i<5;i++) {{
+                confetti({{
+                    particleCount: 100,
+                    spread: 70,
+                    origin: {{y:0.6}}
+                }});
             }}
-        }}
 
-        requestAnimationFrame(anim);
+            winnerText.innerHTML = "🎉 " + winner;
+            overlay.style.display = "flex";
+        }}
     }}
 
+    requestAnimationFrame(anim);
+}}
     spinBtn.onclick = spin;
 
     overlay.onclick = () => overlay.style.display="none";
