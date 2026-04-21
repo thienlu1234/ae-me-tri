@@ -30,34 +30,37 @@ else:
         background: white;
         font-family: Arial;
     }}
-    
+
     .wrap {{
         display: flex;
-        flex-direction: column;
+        justify-content: center;
         align-items: center;
     }}
-    
+
     .wheel-area {{
         position: relative;
         width: 520px;
         height: 520px;
     }}
-    
+
+    /* ✅ FIX KIM */
     .pointer {{
         position: absolute;
-        top: 10px;
+        top: 0;
         left: 50%;
         transform: translateX(-50%);
+        width: 0;
+        height: 0;
         border-left: 20px solid transparent;
         border-right: 20px solid transparent;
-        border-bottom: 40px solid red;
+        border-top: 40px solid red;
         z-index: 10;
     }}
-    
+
     canvas {{
         border-radius: 50%;
     }}
-    
+
     .center-btn {{
         position: absolute;
         width: 100px;
@@ -71,11 +74,11 @@ else:
         z-index: 20;
         box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }}
-    
+
     .center-btn:active {{
         transform: translate(-50%, -50%) scale(0.95);
     }}
-    
+
     .overlay {{
         position: fixed;
         top: 0;
@@ -88,7 +91,7 @@ else:
         justify-content: center;
         z-index: 100;
     }}
-    
+
     .winner-box {{
         background: white;
         padding: 40px;
@@ -97,11 +100,10 @@ else:
         font-weight: bold;
         text-align: center;
     }}
-    
     </style>
     </head>
     <body>
-    
+
     <div class="wrap">
         <div class="wheel-area">
             <div class="pointer"></div>
@@ -109,13 +111,13 @@ else:
             <div class="center-btn" id="spinBtn"></div>
         </div>
     </div>
-    
+
     <div class="overlay" id="overlay">
         <div class="winner-box" id="winnerText"></div>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    
+
     <script>
     const names = {names_js};
     const canvas = document.getElementById("wheel");
@@ -123,29 +125,29 @@ else:
     const spinBtn = document.getElementById("spinBtn");
     const overlay = document.getElementById("overlay");
     const winnerText = document.getElementById("winnerText");
-    
+
     const size = canvas.width;
     const center = size / 2;
     const radius = center - 10;
     const arc = (Math.PI * 2) / names.length;
-    
+
     const colors = ["#ff4d6d","#3a86ff","#8338ec","#ffbe0b","#2ec4b6","#8ac926"];
-    
+
     let rotation = 0;
     let spinning = false;
-    
+
     function draw() {{
         ctx.clearRect(0,0,size,size);
-    
+
         for(let i=0;i<names.length;i++) {{
             const angle = rotation + i*arc - Math.PI/2;
-    
+
             ctx.beginPath();
             ctx.moveTo(center,center);
             ctx.arc(center,center,radius,angle,angle+arc);
             ctx.fillStyle = colors[i%colors.length];
             ctx.fill();
-    
+
             ctx.save();
             ctx.translate(center,center);
             ctx.rotate(angle+arc/2);
@@ -156,40 +158,48 @@ else:
             ctx.restore();
         }}
     }}
-    
+
     function easeOut(t) {{
         return 1 - Math.pow(1-t,3);
     }}
-    
+
     function getWinner() {{
         const deg = (2*Math.PI - rotation%(2*Math.PI));
         return Math.floor(deg/arc)%names.length;
     }}
-    
+
     function spin() {{
         if(spinning) return;
         spinning = true;
-    
-        const total = Math.random()*2000+3000;
-        let start=null;
-    
+
+        const extraSpins = 5 + Math.random() * 5;
+        const randomOffset = Math.random() * Math.PI * 2;
+
+        const startRotation = rotation;
+        const finalRotation = rotation + extraSpins * Math.PI * 2 + randomOffset;
+
+        const duration = 4000;
+        let start = null;
+
         function anim(t) {{
-            if(!start) start=t;
-            let progress=(t-start)/total;
-            if(progress>1) progress=1;
-    
+            if(!start) start = t;
+            let progress = (t - start) / duration;
+            if(progress > 1) progress = 1;
+
             let eased = easeOut(progress);
-            rotation = eased * (Math.PI*10);
+
+            rotation = startRotation + (finalRotation - startRotation) * eased;
+
             draw();
-    
-            if(progress<1) {{
+
+            if(progress < 1) {{
                 requestAnimationFrame(anim);
             }} else {{
-                spinning=false;
-    
+                spinning = false;
+
                 let winner = names[getWinner()];
-    
-                // pháo hoa
+
+                // 🎆 pháo hoa
                 for(let i=0;i<5;i++) {{
                     confetti({{
                         particleCount: 100,
@@ -197,24 +207,22 @@ else:
                         origin: {{y:0.6}}
                     }});
                 }}
-    
-                // hiện popup
+
                 winnerText.innerHTML = "🎉 " + winner;
                 overlay.style.display = "flex";
             }}
         }}
-    
+
         requestAnimationFrame(anim);
     }}
-    
+
     spinBtn.onclick = spin;
-    
-    // click overlay để tắt
+
     overlay.onclick = () => overlay.style.display="none";
-    
+
     draw();
     </script>
-    
+
     </body>
     </html>
     """
