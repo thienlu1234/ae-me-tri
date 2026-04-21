@@ -132,20 +132,16 @@ else:
     const center = size / 2;
     const radius = center - 10;
     const arc = (Math.PI * 2) / names.length;
+    const twoPi = Math.PI * 2;
 
     const colors = [
         "#ff4d6d", "#3a86ff", "#8338ec", "#ffbe0b",
         "#2ec4b6", "#8ac926", "#f72585", "#4cc9f0",
-        "#7209b7", "#f77f00"
+        "#7209b7", "#f77f00", "#4361ee", "#43aa8b"
     ];
 
     let rotation = 0;
     let spinning = false;
-
-    function normalizeAngle(angle) {{
-        const twoPi = Math.PI * 2;
-        return ((angle % twoPi) + twoPi) % twoPi;
-    }}
 
     function draw() {{
         ctx.clearRect(0, 0, size, size);
@@ -164,18 +160,16 @@ else:
             ctx.save();
             ctx.translate(center, center);
             ctx.rotate(startAngle + arc / 2);
-
             ctx.fillStyle = "white";
             ctx.font = "bold 20px Arial";
             ctx.textAlign = "right";
             ctx.textBaseline = "middle";
             ctx.fillText(names[i], radius - 20, 0);
-
             ctx.restore();
         }}
     }}
 
-    function easeOut(t) {{
+    function easeOutCubic(t) {{
         return 1 - Math.pow(1 - t, 3);
     }}
 
@@ -184,30 +178,31 @@ else:
         spinning = true;
 
         const targetIndex = names.indexOf("Nhung");
+
+        // Góc chuẩn để tâm ô Nhung nằm đúng dưới kim top
+        const targetRotationBase = -(targetIndex * arc + arc / 2);
+
+        // Quay thêm nhiều vòng cho tự nhiên
         const extraSpins = 5 + Math.random() * 5;
-        const twoPi = Math.PI * 2;
+        const minRotation = rotation + extraSpins * twoPi;
 
-        // Góc đích chuẩn để tâm ô "Nhung" nằm đúng dưới kim ở vị trí top
-        const desiredRotationMod = normalizeAngle(-(targetIndex * arc + arc / 2));
-
-        // Góc hiện tại của bánh xe
-        const currentRotationMod = normalizeAngle(rotation);
-
-        // Góc cần quay thêm để từ vị trí hiện tại tới đúng ô "Nhung"
-        const deltaToTarget = normalizeAngle(desiredRotationMod - currentRotationMod);
+        // Ép finalRotation phải vừa >= minRotation, vừa đúng vị trí ô Nhung
+        let finalRotation = targetRotationBase;
+        while (finalRotation < minRotation) {{
+            finalRotation += twoPi;
+        }}
 
         const startRotation = rotation;
-        const finalRotation = rotation + extraSpins * twoPi + deltaToTarget;
-
         const duration = 4000;
-        let start = null;
+        let startTime = null;
 
-        function anim(t) {{
-            if (!start) start = t;
-            let progress = (t - start) / duration;
+        function anim(timestamp) {{
+            if (!startTime) startTime = timestamp;
+
+            let progress = (timestamp - startTime) / duration;
             if (progress > 1) progress = 1;
 
-            const eased = easeOut(progress);
+            const eased = easeOutCubic(progress);
             rotation = startRotation + (finalRotation - startRotation) * eased;
 
             draw();
@@ -215,6 +210,7 @@ else:
             if (progress < 1) {{
                 requestAnimationFrame(anim);
             }} else {{
+                // Snap chính xác vào Nhung ở frame cuối
                 rotation = finalRotation;
                 draw();
                 spinning = false;
