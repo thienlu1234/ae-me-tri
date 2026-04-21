@@ -1,9 +1,9 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Vòng quay chọn người thắng", page_icon="🎡", layout="wide")
+st.set_page_config(page_title="Vòng quay chọn người thắng", page_icon="🍻", layout="wide")
 
-st.title("🎡 Vòng quay chọn người thắng")
+st.title("🍻🍻🍻 Vòng quay của anh em Mễ Trì")
 
 default_names = "An\nBình\nChi\nDũng\nHà\nLan\nNhung"
 names_input = st.text_area(
