@@ -39,10 +39,12 @@ else:
         align-items: center;
     }}
 
+    /* 🔥 FIX MOBILE */
     .wheel-area {{
         position: relative;
-        width: 520px;
-        height: 520px;
+        width: 90vw;        /* co theo màn hình */
+        max-width: 520px;   /* giữ đẹp trên desktop */
+        aspect-ratio: 1/1;  /* luôn là hình tròn */
     }}
 
     .pointer {{
@@ -59,13 +61,15 @@ else:
     }}
 
     canvas {{
+        width: 100%;   /* 🔥 responsive */
+        height: 100%;
         border-radius: 50%;
     }}
 
     .center-btn {{
         position: absolute;
-        width: 100px;
-        height: 100px;
+        width: 20%;   /* 🔥 tự co theo màn hình */
+        height: 20%;
         background: radial-gradient(circle, #ffd95a, #f4b400);
         border-radius: 50%;
         top: 50%;
@@ -109,7 +113,7 @@ else:
     <div class="wrap">
         <div class="wheel-area">
             <div class="pointer"></div>
-            <canvas id="wheel" width="500" height="500"></canvas>
+            <canvas id="wheel"></canvas>  <!-- 🔥 bỏ width/height -->
             <div class="center-btn" id="spinBtn"></div>
         </div>
     </div>
@@ -124,14 +128,25 @@ else:
     const names = {names_js};
     const canvas = document.getElementById("wheel");
     const ctx = canvas.getContext("2d");
+
+    /* 🔥 FIX RESIZE */
+    function resizeCanvas() {{
+        const size = canvas.parentElement.clientWidth;
+        canvas.width = size;
+        canvas.height = size;
+    }}
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
     const spinBtn = document.getElementById("spinBtn");
     const overlay = document.getElementById("overlay");
     const winnerText = document.getElementById("winnerText");
 
-    const size = canvas.width;
-    const center = size / 2;
-    const radius = center - 10;
-    const arc = (Math.PI * 2) / names.length;
+    let size = canvas.width;
+    let center = size / 2;
+    let radius = center - 10;
+    let arc = (Math.PI * 2) / names.length;
     const twoPi = Math.PI * 2;
 
     const colors = [
@@ -144,6 +159,11 @@ else:
     let spinning = false;
 
     function draw() {{
+        size = canvas.width;
+        center = size / 2;
+        radius = center - 10;
+        arc = (Math.PI * 2) / names.length;
+
         ctx.clearRect(0, 0, size, size);
 
         for (let i = 0; i < names.length; i++) {{
@@ -161,7 +181,7 @@ else:
             ctx.translate(center, center);
             ctx.rotate(startAngle + arc / 2);
             ctx.fillStyle = "white";
-            ctx.font = "bold 20px Arial";
+            ctx.font = Math.max(14, size / 25) + "px Arial";  /* 🔥 chữ auto */
             ctx.textAlign = "right";
             ctx.textBaseline = "middle";
             ctx.fillText(names[i], radius - 20, 0);
@@ -179,14 +199,11 @@ else:
 
         const targetIndex = names.indexOf("Nhung");
 
-        // Góc chuẩn để tâm ô Nhung nằm đúng dưới kim top
         const targetRotationBase = -(targetIndex * arc + arc / 2);
 
-        // Quay thêm nhiều vòng cho tự nhiên
         const extraSpins = 5 + Math.random() * 5;
         const minRotation = rotation + extraSpins * twoPi;
 
-        // Ép finalRotation phải vừa >= minRotation, vừa đúng vị trí ô Nhung
         let finalRotation = targetRotationBase;
         while (finalRotation < minRotation) {{
             finalRotation += twoPi;
@@ -210,7 +227,6 @@ else:
             if (progress < 1) {{
                 requestAnimationFrame(anim);
             }} else {{
-                // Snap chính xác vào Nhung ở frame cuối
                 rotation = finalRotation;
                 draw();
                 spinning = false;
@@ -232,9 +248,7 @@ else:
     }}
 
     spinBtn.onclick = spin;
-    overlay.onclick = () => {{
-        overlay.style.display = "none";
-    }};
+    overlay.onclick = () => overlay.style.display = "none";
 
     draw();
     </script>
