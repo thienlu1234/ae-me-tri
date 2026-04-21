@@ -14,7 +14,6 @@ names_input = st.text_area(
 
 names = [n.strip() for n in names_input.split("\n") if n.strip()]
 
-# 🔒 Bắt buộc phải có Nhung
 if "Nhung" not in names:
     st.error("❌ Không có Nhung nên không chơi")
 elif len(names) < 2:
@@ -31,7 +30,7 @@ else:
     body {{
         margin: 0;
         background: white;
-        font-family: Arial;
+        font-family: Arial, sans-serif;
     }}
 
     .wrap {{
@@ -101,6 +100,7 @@ else:
         font-size: 40px;
         font-weight: bold;
         text-align: center;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
     }}
     </style>
     </head>
@@ -133,10 +133,19 @@ else:
     const radius = center - 10;
     const arc = (Math.PI * 2) / names.length;
 
-    const colors = ["#ff4d6d","#3a86ff","#8338ec","#ffbe0b","#2ec4b6","#8ac926"];
+    const colors = [
+        "#ff4d6d", "#3a86ff", "#8338ec", "#ffbe0b",
+        "#2ec4b6", "#8ac926", "#f72585", "#4cc9f0",
+        "#7209b7", "#f77f00"
+    ];
 
     let rotation = 0;
     let spinning = false;
+
+    function normalizeAngle(angle) {{
+        const twoPi = Math.PI * 2;
+        return ((angle % twoPi) + twoPi) % twoPi;
+    }}
 
     function draw() {{
         ctx.clearRect(0, 0, size, size);
@@ -155,11 +164,13 @@ else:
             ctx.save();
             ctx.translate(center, center);
             ctx.rotate(startAngle + arc / 2);
+
             ctx.fillStyle = "white";
             ctx.font = "bold 20px Arial";
             ctx.textAlign = "right";
             ctx.textBaseline = "middle";
             ctx.fillText(names[i], radius - 20, 0);
+
             ctx.restore();
         }}
     }}
@@ -173,17 +184,21 @@ else:
         spinning = true;
 
         const targetIndex = names.indexOf("Nhung");
-
         const extraSpins = 5 + Math.random() * 5;
-        const sliceAngle = (2 * Math.PI) / names.length;
+        const twoPi = Math.PI * 2;
 
-        // 🎯 Công thức chuẩn tuyệt đối
-        const finalRotation =
-            extraSpins * Math.PI * 2 +
-            (Math.PI / 2) -
-            (targetIndex * sliceAngle + sliceAngle / 2);
+        // Góc đích chuẩn để tâm ô "Nhung" nằm đúng dưới kim ở vị trí top
+        const desiredRotationMod = normalizeAngle(-(targetIndex * arc + arc / 2));
+
+        // Góc hiện tại của bánh xe
+        const currentRotationMod = normalizeAngle(rotation);
+
+        // Góc cần quay thêm để từ vị trí hiện tại tới đúng ô "Nhung"
+        const deltaToTarget = normalizeAngle(desiredRotationMod - currentRotationMod);
 
         const startRotation = rotation;
+        const finalRotation = rotation + extraSpins * twoPi + deltaToTarget;
+
         const duration = 4000;
         let start = null;
 
@@ -200,6 +215,8 @@ else:
             if (progress < 1) {{
                 requestAnimationFrame(anim);
             }} else {{
+                rotation = finalRotation;
+                draw();
                 spinning = false;
 
                 for (let i = 0; i < 5; i++) {{
@@ -219,7 +236,9 @@ else:
     }}
 
     spinBtn.onclick = spin;
-    overlay.onclick = () => overlay.style.display = "none";
+    overlay.onclick = () => {{
+        overlay.style.display = "none";
+    }};
 
     draw();
     </script>
