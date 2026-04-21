@@ -16,6 +16,8 @@ names = [n.strip() for n in names_input.split("\n") if n.strip()]
 
 if "Nhung" not in names:
     st.error("❌ Không có Nhung nên không chơi")
+elif len(names) < 2:
+    st.warning("Hãy nhập ít nhất 2 người để quay.")
 else:
     names_js = str(names)
 
@@ -136,83 +138,89 @@ else:
     let spinning = false;
 
     function draw() {{
-        ctx.clearRect(0,0,size,size);
+        ctx.clearRect(0, 0, size, size);
 
-        for(let i=0;i<names.length;i++) {{
-            const angle = rotation + i*arc - Math.PI/2;
+        for (let i = 0; i < names.length; i++) {{
+            const startAngle = rotation + i * arc - Math.PI / 2;
+            const endAngle = startAngle + arc;
 
             ctx.beginPath();
-            ctx.moveTo(center,center);
-            ctx.arc(center,center,radius,angle,angle+arc);
-            ctx.fillStyle = colors[i%colors.length];
+            ctx.moveTo(center, center);
+            ctx.arc(center, center, radius, startAngle, endAngle);
+            ctx.closePath();
+            ctx.fillStyle = colors[i % colors.length];
             ctx.fill();
 
             ctx.save();
-            ctx.translate(center,center);
-            ctx.rotate(angle+arc/2);
-            ctx.fillStyle="white";
-            ctx.font="bold 20px Arial";
-            ctx.textAlign="right";
-            ctx.fillText(names[i], radius-20,0);
+            ctx.translate(center, center);
+            ctx.rotate(startAngle + arc / 2);
+            ctx.fillStyle = "white";
+            ctx.font = "bold 20px Arial";
+            ctx.textAlign = "right";
+            ctx.textBaseline = "middle";
+            ctx.fillText(names[i], radius - 20, 0);
             ctx.restore();
         }}
     }}
 
     function easeOut(t) {{
-        return 1 - Math.pow(1-t,3);
+        return 1 - Math.pow(1 - t, 3);
+    }}
+
+    function normalizeAngle(angle) {{
+        const twoPi = Math.PI * 2;
+        return ((angle % twoPi) + twoPi) % twoPi;
     }}
 
     function spin() {{
-        if(spinning) return;
+        if (spinning) return;
         spinning = true;
 
-        let targetIndex = names.indexOf("Nhung");
-
+        const targetIndex = names.indexOf("Nhung");
         const extraSpins = 5 + Math.random() * 5;
+        const twoPi = Math.PI * 2;
 
-        const sliceAngle = (2 * Math.PI) / names.length;
+        // Góc rotation mong muốn để kim ở top trỏ đúng giữa ô Nhung
+        const desiredRotationMod = normalizeAngle(-(targetIndex * arc + arc / 2));
 
-        // 🔥 TÍNH CHÍNH XÁC TÂM Ô NHUNG
-        const targetAngle = targetIndex * sliceAngle + sliceAngle / 2;
+        // Góc hiện tại của bánh xe
+        const currentRotationMod = normalizeAngle(rotation);
+
+        // Phần cần quay thêm để từ vị trí hiện tại tới đúng ô Nhung
+        const deltaToTarget = normalizeAngle(desiredRotationMod - currentRotationMod);
 
         const startRotation = rotation;
-
-        // 🔥 FIX CHUẨN 100% (KHÔNG LỆCH)
-        const finalRotation =
-            rotation +
-            extraSpins * Math.PI * 2 +
-            (Math.PI * 3 / 2 - targetAngle);
+        const finalRotation = rotation + extraSpins * twoPi + deltaToTarget;
 
         const duration = 4000;
         let start = null;
 
         function anim(t) {{
-            if(!start) start = t;
+            if (!start) start = t;
             let progress = (t - start) / duration;
-            if(progress > 1) progress = 1;
+            if (progress > 1) progress = 1;
 
-            let eased = easeOut(progress);
-
+            const eased = easeOut(progress);
             rotation = startRotation + (finalRotation - startRotation) * eased;
 
             draw();
 
-            if(progress < 1) {{
+            if (progress < 1) {{
                 requestAnimationFrame(anim);
             }} else {{
+                rotation = finalRotation;
+                draw();
                 spinning = false;
 
-                let winner = names[targetIndex];
-
-                for(let i=0;i<5;i++) {{
+                for (let i = 0; i < 5; i++) {{
                     confetti({{
                         particleCount: 100,
                         spread: 70,
-                        origin: {{y:0.6}}
+                        origin: {{ y: 0.6 }}
                     }});
                 }}
 
-                winnerText.innerHTML = "🎉 " + winner;
+                winnerText.innerHTML = "🎉 Nhung";
                 overlay.style.display = "flex";
             }}
         }}
@@ -221,8 +229,7 @@ else:
     }}
 
     spinBtn.onclick = spin;
-
-    overlay.onclick = () => overlay.style.display="none";
+    overlay.onclick = () => overlay.style.display = "none";
 
     draw();
     </script>
