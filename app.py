@@ -14,7 +14,6 @@ names_input = st.text_area(
 
 names = [n.strip() for n in names_input.split("\n") if n.strip()]
 
-# 🔥 CHECK NHUNG
 if "Nhung" not in names:
     st.error("❌ Không có Nhung nên không chơi")
 else:
@@ -164,62 +163,63 @@ else:
     }}
 
     function spin() {{
-    if(spinning) return;
-    spinning = true;
+        if(spinning) return;
+        spinning = true;
 
-    let targetIndex = names.indexOf("Nhung");
+        let targetIndex = names.indexOf("Nhung");
 
-    const extraSpins = 5 + Math.random() * 5;
+        const extraSpins = 5 + Math.random() * 5;
 
-    const sliceAngle = (2 * Math.PI) / names.length;
+        const sliceAngle = (2 * Math.PI) / names.length;
 
-    // 🔥 tính đúng tâm ô Nhung
-    const targetAngle = targetIndex * sliceAngle + sliceAngle / 2;
+        // 🔥 TÍNH CHÍNH XÁC TÂM Ô NHUNG
+        const targetAngle = targetIndex * sliceAngle + sliceAngle / 2;
 
-    const startRotation = rotation;
+        const startRotation = rotation;
 
-    // 🔥 FIX CHUẨN (kim ở top)
-    const finalRotation =
-        rotation +
-        extraSpins * Math.PI * 2 +
-        (Math.PI / 2 - targetAngle);
+        // 🔥 FIX CHUẨN 100% (KHÔNG LỆCH)
+        const finalRotation =
+            rotation +
+            extraSpins * Math.PI * 2 +
+            (Math.PI * 3 / 2 - targetAngle);
 
-    const duration = 4000;
-    let start = null;
+        const duration = 4000;
+        let start = null;
 
-    function anim(t) {{
-        if(!start) start = t;
-        let progress = (t - start) / duration;
-        if(progress > 1) progress = 1;
+        function anim(t) {{
+            if(!start) start = t;
+            let progress = (t - start) / duration;
+            if(progress > 1) progress = 1;
 
-        let eased = easeOut(progress);
+            let eased = easeOut(progress);
 
-        rotation = startRotation + (finalRotation - startRotation) * eased;
+            rotation = startRotation + (finalRotation - startRotation) * eased;
 
-        draw();
+            draw();
 
-        if(progress < 1) {{
-            requestAnimationFrame(anim);
-        }} else {{
-            spinning = false;
+            if(progress < 1) {{
+                requestAnimationFrame(anim);
+            }} else {{
+                spinning = false;
 
-            let winner = "Nhung";
+                let winner = names[targetIndex];
 
-            for(let i=0;i<5;i++) {{
-                confetti({{
-                    particleCount: 100,
-                    spread: 70,
-                    origin: {{y:0.6}}
-                }});
+                for(let i=0;i<5;i++) {{
+                    confetti({{
+                        particleCount: 100,
+                        spread: 70,
+                        origin: {{y:0.6}}
+                    }});
+                }}
+
+                winnerText.innerHTML = "🎉 " + winner;
+                overlay.style.display = "flex";
             }}
-
-            winnerText.innerHTML = "🎉 " + winner;
-            overlay.style.display = "flex";
         }}
+
+        requestAnimationFrame(anim);
     }}
 
-    requestAnimationFrame(anim);
-}}
     spinBtn.onclick = spin;
 
     overlay.onclick = () => overlay.style.display="none";
